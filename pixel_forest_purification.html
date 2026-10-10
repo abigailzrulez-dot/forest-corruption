@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Forest Purification</title>
+    <!-- Tailwind CSS for modern layout utilities -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for pixel-art aesthetic (Press Start 2P and VT323) -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- FontAwesome for retro icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        pixel: ['"Press Start 2P"', 'monospace'],
+                        vt: ['"VT323"', 'monospace']
+                    },
+                    colors: {
+                        forest: {
+                            900: '#132210',
+                            800: '#1b3b18',
+                            700: '#2d5a27',
+                            600: '#408236',
+                            500: '#5ab04c',
+                            400: '#84cc6d',
+                            300: '#b4e1a1',
+                        },
+                        mystic: {
+                            900: '#1a102f',
+                            800: '#2b1b4e',
+                            700: '#442878',
+                            600: '#683fa0',
+                            500: '#905bc4',
+                        },
+                        corrupt: {
+                            900: '#4a0d24',
+                            800: '#7a143b',
+                            700: '#bd1c5b',
+                            600: '#f43f7c',
+                            500: '#fb7185',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        
+        .pixel-font {
+            font-family: 'Press Start 2P', monospace;
+        }
+        .arcade-font {
+            font-family: 'VT323', monospace;
+        }
+
+        /* CRT Scanline Effect */
+        .crt::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 999;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Scanline vignette */
+        .vignette {
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+        }
+
+        /* Pixel borders */
+        .pixel-box {
+            box-shadow: 
+                -4px 0 0 0 #1b3b18,
+                4px 0 0 0 #1b3b18,
+                0 -4px 0 0 #1b3b18,
+                0 4px 0 0 #1b3b18,
+                -2px -2px 0 0 #1b3b18,
+                2px -2px 0 0 #1b3b18,
+                -2px 2px 0 0 #1b3b18,
+                2px 2px 0 0 #1b3b18;
+        }
+
+        .pixel-box-corrupt {
+            box-shadow: 
+                -4px 0 0 0 #7a143b,
+                4px 0 0 0 #7a143b,
+                0 -4px 0 0 #7a143b,
+                0 4px 0 0 #7a143b,
+                -2px -2px 0 0 #7a143b,
+                2px -2px 0 0 #7a143b,
+                -2px 2px 0 0 #7a143b,
+                2px 2px 0 0 #7a143b;
+        }
+
+        .pixel-btn {
+            box-shadow: 
+                inset -4px -4px 0px 0px rgba(0,0,0,0.4),
+                inset 4px 4px 0px 0px rgba(255,255,255,0.3);
+            transition: transform 0.1s ease;
+        }
+        .pixel-btn:active {
+            transform: translateY(2px);
+            box-shadow: 
+                inset -2px -2px 0px 0px rgba(0,0,0,0.4),
+                inset 2px 2px 0px 0px rgba(255,255,255,0.3);
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(3deg); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.6; filter: brightness(1); }
+            50% { opacity: 1; filter: brightness(1.3); }
+        }
+
+        @keyframes glitchCorrupt {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+
+        .animate-float {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+
+        .animate-pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        .glitch-anim:hover {
+            animation: glitchCorrupt 0.3s ease infinite;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a102f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #442878;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-mystic-900 text-forest-300 font-vt text-2xl selection:bg-forest-600 selection:text-white crt vignette min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <header class="w-full bg-mystic-800 border-b-4 border-mystic-700 p-4 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-forest-600 pixel-box flex items-center justify-center text-white text-xl animate-bounce">
+                    <i class="fa-solid id-icon fa-seedling"></i>
+                </div>
+                <div>
+                    <h1 class="pixel-font text-xs md:text-sm text-forest-400 tracking-wider">PIXEL FOREST SANCTUARY</h1>
+                    <p class="text-xs text-mystic-400">Purify the corruption by completing daily quests!</p>
+                </div>
+            </div>
+
+            <!-- Progress Bar Section -->
+            <div class="w-full md:w-1/2 flex flex-col gap-1">
+                <div class="flex justify-between text-sm pixel-font">
+                    <span id="health-label" class="text-corrupt-500">CORRUPT STATE: <span id="health-percent">15%</span></span>
+                    <span class="text-forest-400">PURE SPIRIT</span>
+                </div>
+                <div class="w-full h-6 bg-mystic-900 pixel-box relative overflow-hidden p-1">
+                    <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-corrupt-600 via-mystic-500 to-forest-500 transition-all duration-500 rounded-sm relative" style="width: 15%;">
+                        <div class="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] bg-[length:16px_16px] animate-[pulse_2s_linear_infinite]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio & Info Toggles -->
+            <div class="flex items-center gap-3">
+                <button id="sound-toggle" onclick="toggleAudio()" class="px-3 py-2 bg-mystic-700 hover:bg-mystic-600 pixel-btn text-white text-sm pixel-font flex items-center gap-2">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span class="hidden sm:inline">SFX</span>
+                </button>
+                <button onclick="showSanctuaryLore()" class="px-3 py-2 bg-forest-700 hover:bg-forest-600 pixel-btn text-white text-sm pixel-font">
+                    <i class="fa-solid fa-book-open"></i> LORE
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow items-start">
+        
+        <!-- Interactive Pixel Forest Scene (Left/Center Column) -->
+        <div class="lg:col-span-7 flex flex-col gap-4">
+            <div id="forest-canvas-container" class="relative w-full h-[380px] sm:h-[450px] bg-gradient-to-b from-mystic-900 via-mystic-800 to-forest-900 pixel-box overflow-hidden rounded-md border-4 border-mystic-700 flex flex-col justify-between p-4 shadow-2xl">
+                
+                <!-- Background Glowing Moon / Magical Particles -->
+                <div class="absolute top-6 right-10 w-20 h-20 rounded-full bg-purple-500/20 blur-xl animate-pulse-glow"></div>
+                <div class="absolute top-10 right-16 w-12 h-12 rounded-full bg-forest-400/30 blur-lg"></div>
+
+                <!-- Floating Fireflies / Sparkles -->
+                <div class="absolute inset-0 pointer-events-none overflow-hidden" id="fireflies-container">
+                    <!-- Dynamic particles injected via JS -->
+                </div>
+
+                <!-- Forest Canopy & Sky Skyline (SVG Pixel Style Elements) -->
+                <div class="relative z-10 flex justify-between items-start pointer-events-none">
+                    <!-- Mystic Tree Left -->
+                    <div class="flex flex-col items-center animate-float">
+                        <div class="text-4xl text-forest-500 drop-shadow-[0_2px_0px_#132210]">🌲</div>
+                        <div class="w-2 h-8 bg-forest-900"></div>
+                    </div>
+                    <!-- Corrupted Tree Center-Left -->
+                    <div id="corrupt-tree-1" class="flex flex-col items-center transition-all duration-700 glitch-anim cursor-pointer pointer-events-auto" onclick="interactWithEntity('corrupted_tree')">
+                        <div class="text-4xl text-corrupt-500 drop-shadow-[0_2px_0px_#4a0d24]">⚡</div>
+                        <div class="w-2 h-8 bg-corrupt-900"></div>
+                        <span class="text-xs pixel-font text-corrupt-400 bg-mystic-900/80 px-1 mt-1 rounded border border-corrupt-700">Corrupted</span>
+                    </div>
+                    <!-- Cute Pixely Bunny Sprite Right -->
+                    <div id="forest-bunny" class="flex flex-col items-center animate-float cursor-pointer pointer-events-auto group" onclick="interactWithEntity('bunny')">
+                        <div class="text-4xl text-forest-300 group-hover:scale-110 transition-transform drop-shadow-[0_2px_0px_#1b3b18]">🐇</div>
+                        <span class="text-xs pixel-font text-forest-300 bg-mystic-900/80 px-1 mt-1 rounded border border-forest-600">Bibi</span>
+                    </div>
+                </div>
+
+                <!-- Center Dialogue / Status Bubble -->
+                <div class="relative z-20 self-center bg-mystic-900/90 border-2 border-forest-500 p-3 rounded pixel-box max-w-md text-center shadow-lg">
+                    <p id="forest-dialogue" class="text-xl md:text-2xl text-forest-300">"The forest whispers to you... Complete tasks to heal the corruption!"</p>
+                </div>
+
+                <!-- Forest Floor Elements (Grass, Crystals, Shrubbery) -->
+                <div class="relative z-10 flex justify-around items-end pt-8">
+                    <!-- Healing Crystal Left -->
+                    <div id="healing-crystal" class="flex flex-col items-center cursor-pointer hover:scale-110 transition-transform" onclick="interactWithEntity('crystal')">
+                        <div class="text-3xl text-forest-400 animate-pulse">💎</div>
+                        <span class="text-xs pixel-font text-forest-400">Pure Shard</span>
+                    </div>
+
+                    <!-- Corrupted Crystal Center -->
+                    <div id="corrupt-crystal" class="flex flex-col items-center cursor-pointer glitch-anim" onclick="interactWithEntity('corrupt_crystal')">
+                        <div class="text-3xl text-corrupt-600 animate-bounce">🔮</div>
+                        <span class="text-xs pixel-font text-corrupt-500">Void Node</span>
+                    </div>
+
+                    <!-- Cute Sprite Mushroom Right -->
+                    <div id="forest-shroom" class="flex flex-col items-center cursor-pointer hover:scale-110 transition-transform" onclick="interactWithEntity('mushroom')">
+                        <div class="text-3xl text-purple-400 animate-float">🍄</div>
+                        <span class="text-xs pixel-font text-purple-300">Misha</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stat Cards -->
+            <div class="grid grid-cols-3 gap-3">
+                <div class="bg-mystic-800 border-2 border-mystic-700 p-3 pixel-box text-center">
+                    <span class="text-xs pixel-font text-mystic-400 block mb-1">TASKS DONE</span>
+                    <span id="stat-completed" class="text-3xl text-forest-400 font-bold">0</span>
+                </div>
+                <div class="bg-mystic-800 border-2 border-mystic-700 p-3 pixel-box text-center">
+                    <span class="text-xs pixel-font text-mystic-400 block mb-1">PURIFICATION</span>
+                    <span id="stat-purification" class="text-3xl text-purple-400 font-bold">15%</span>
+                </div>
+                <div class="bg-mystic-800 border-2 border-mystic-700 p-3 pixel-box text-center">
+                    <span class="text-xs pixel-font text-mystic-400 block mb-1">FOREST SPIRIT</span>
+                    <span id="stat-status" class="text-2xl text-corrupt-500 font-bold">Wounded</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-5 flex flex-col gap-4">
+            <div class="bg-mystic-800 border-4 border-mystic-700 p-4 pixel-box rounded-md shadow-xl flex flex-col h-[480px] md:h-[530px]">
+                
+                <!-- Task Header & Input -->
+                <div class="flex items-center justify-between pb-3 border-b-2 border-mystic-700 mb-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-scroll text-forest-400"></i>
+                        <h2 class="pixel-font text-xs text-forest-300">FOREST QUEST LOG</h2>
+                    </div>
+                    <span id="task-count" class="text-sm bg-mystic-900 px-2 py-1 rounded text-mystic-400 pixel-font">0 Quests</span>
+                </div>
+
+                <!-- Add Task Form -->
+                <form id="task-form" onsubmit="addTask(event)" class="flex gap-2 mb-4">
+                    <input 
+                        type="text" 
+                        id="task-input" 
+                        placeholder="Add a purification task..." 
+                        required
+                        class="flex-grow bg-mystic-900 border-2 border-mystic-600 px-3 py-2 text-forest-300 focus:outline-none focus:border-forest-500 rounded text-xl"
+                    />
+                    <button type="submit" class="bg-forest-700 hover:bg-forest-600 text-white px-4 py-2 pixel-btn pixel-font text-xs flex items-center justify-center">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </form>
+
+                <!-- Filter Buttons -->
+                <div class="flex gap-2 mb-3 text-xs pixel-font">
+                    <button type="button" onclick="setFilter('all')" id="filter-all" class="flex-1 py-1 bg-mystic-700 text-forest-300 border border-mystic-600 active">ALL</button>
+                    <button type="button" onclick="setFilter('active')" id="filter-active" class="flex-1 py-1 bg-mystic-900 text-mystic-400 border border-mystic-700">ACTIVE</button>
+                    <button type="button" onclick="setFilter('completed')" id="filter-completed" class="flex-1 py-1 bg-mystic-900 text-mystic-400 border border-mystic-700">DONE</button>
+                </div>
+
+                <!-- Tasks List Scrollable Area -->
+                <div id="tasks-container" class="flex-grow overflow-y-auto space-y-3 pr-1">
+                    <!-- Tasks will be rendered here dynamically -->
+                </div>
+
+                <!-- Footer Quick Actions -->
+                <div class="pt-3 border-t-2 border-mystic-700 flex justify-between items-center text-xs">
+                    <button onclick="clearCompletedTasks()" class="text-corrupt-500 hover:text-corrupt-400 pixel-font flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> Clear Done
+                    </button>
+                    <button onclick="resetForest()" class="text-mystic-400 hover:text-forest-300 pixel-font flex items-center gap-1">
+                        <i class="fa-solid fa-rotate-right"></i> Reset Forest
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="w-full bg-mystic-800 border-t-4 border-mystic-700 py-3 text-center text-xs text-mystic-400 pixel-font">
+        <p>PIXEL FOREST SANCTUARY &bull; CRAFTED WITH 💚 & ✨</p>
+    </footer>
+
+    <!-- Lore / Instructions Modal -->
+    <div id="lore-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-mystic-800 border-4 border-forest-500 p-6 max-w-lg w-full pixel-box rounded-md shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-mystic-700 pb-2">
+                <h3 class="pixel-font text-sm text-forest-400"><i class="fa-solid fa-seedling"></i> ABOUT THE SANCTUARY</h3>
+                <button onclick="closeSanctuaryLore()" class="text-corrupt-500 hover:text-corrupt-400 pixel-font text-lg font-bold px-2">X</button>
+            </div>
+            <div class="space-y-3 text-xl text-forest-300">
+                <p>Welcome, Guardian! The magical pixel forest has been overtaken by red/pink corruption crystals and shadow vines.</p>
+                <p>By writing and completing your daily tasks in the <strong>Quest Log</strong>, you generate pure green energy that pushes back the corruption!</p>
+                <p>Click on forest creatures (Bibi the Bunny, Misha the Mushroom, and pure crystals) for uplifting encouragements and lore!</p>
+            </div>
+            <div class="mt-6 text-center">
+                <button onclick="closeSanctuaryLore()" class="px-6 py-2 bg-forest-700 hover:bg-forest-600 text-white pixel-btn pixel-font text-xs">GOT IT!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Web Audio API Sound Synthesizer ---
+        let soundEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'complete') {
+                    // Cheerful chime
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'corrupt') {
+                    // Glitchy low sound
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.setValueAtTime(80, now + 0.1);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (soundEnabled) {
+                icon.className = "fa-solid fa-volume-high";
+                playSound('click');
+            } else {
+                icon.className = "fa-solid fa-volume-xmark";
+            }
+        }
+
+        // --- State Management ---
+        let tasks = [
+            { id: 1, text: "Water the mystical forest ferns", completed: true },
+            { id: 2, text: "Meditate under the purple canopy", completed: false },
+            { id: 3, text: "Clear out invasive thorn vines", completed: false }
+        ];
+        let currentFilter = 'all';
+
+        // --- Fireflies Generator ---
+        function initFireflies() {
+            const container = document.getElementById('fireflies-container');
+            for (let i = 0; i < 15; i++) {
+                const fly = document.createElement('div');
+                fly.className = 'absolute w-1.5 h-1.5 rounded-full bg-forest-300 animate-float';
+                fly.style.left = `${Math.random() * 100}%`;
+                fly.style.top = `${Math.random() * 100}%`;
+                fly.style.animationDuration = `${2 + Math.random() * 3}s`;
+                fly.style.animationDelay = `${Math.random() * 2}s`;
+                fly.style.opacity = Math.random() * 0.8 + 0.2;
+                container.appendChild(fly);
+            }
+        }
+
+        // --- Calculation & UI Updates ---
+        function updateForestState() {
+            const total = tasks.length;
+            const completedCount = tasks.filter(t => t.completed).length;
+            
+            // Calculate purification percentage (starts at 15% min, reaches 100% when all tasks done)
+            let percent = total === 0 ? 15 : Math.round(15 + (completedCount / total) * 85);
+            if (percent > 100) percent = 100;
+            if (total === 0) percent = 0;
+
+            // Update Progress Bar
+            const barFill = document.getElementById('progress-bar-fill');
+            barFill.style.width = `${percent}%`;
+
+            const percentLabel = document.getElementById('health-percent');
+            const healthLabel = document.getElementById('health-label');
+            const statPurification = document.getElementById('stat-purification');
+            const statCompleted = document.getElementById('stat-completed');
+            const statStatus = document.getElementById('stat-status');
+            const taskCountLabel = document.getElementById('task-count');
+
+            percentLabel.textContent = `${percent}%`;
+            statPurification.textContent = `${percent}%`;
+            statCompleted.textContent = completedCount;
+            taskCountLabel.textContent = `${total} Quests`;
+
+            // Adjust visuals based on purification percentage
+            const corruptTree = document.getElementById('corrupt-tree-1');
+            const corruptCrystal = document.getElementById('corrupt-crystal');
+            
+            if (percent > 70) {
+                healthLabel.className = "text-forest-400";
+                healthLabel.innerHTML = `PURE SANCTUARY: <span id="health-percent">${percent}%</span>`;
+                statStatus.textContent = "Flourishing";
+                statStatus.className = "text-2xl text-forest-400 font-bold";
+                if (corruptTree) corruptTree.style.opacity = "0.3";
+                if (corruptCrystal) corruptCrystal.style.opacity = "0.2";
+            } else if (percent > 40) {
+                healthLabel.className = "text-purple-400";
+                healthLabel.innerHTML = `HEALING...: <span id="health-percent">${percent}%</span>`;
+                statStatus.textContent = "Awakening";
+                statStatus.className = "text-2xl text-purple-400 font-bold";
+                if (corruptTree) corruptTree.style.opacity = "0.6";
+                if (corruptCrystal) corruptCrystal.style.opacity = "0.5";
+            } else {
+                healthLabel.className = "text-corrupt-500";
+                healthLabel.innerHTML = `CORRUPT STATE: <span id="health-percent">${percent}%</span>`;
+                statStatus.textContent = "Wounded";
+                statStatus.className = "text-2xl text-corrupt-500 font-bold";
+                if (corruptTree) corruptTree.style.opacity = "1";
+                if (corruptCrystal) corruptCrystal.style.opacity = "1";
+            }
+        }
+
+        // --- Task Management Functions ---
+        function renderTasks() {
+            const container = document.getElementById('tasks-container');
+            container.innerHTML = '';
+
+            let filteredTasks = tasks.filter(t => {
+                if (currentFilter === 'active') return !t.completed;
+                if (currentFilter === 'completed') return t.completed;
+                return true;
+            });
+
+            if (filteredTasks.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-mystic-500 pixel-font text-xs">
+                        <i class="fa-solid fa-ghost text-3xl mb-2"></i>
+                        <p>No quests found in this path...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredTasks.forEach(task => {
+                const taskEl = document.createElement('div');
+                taskEl.className = `flex items-center justify-between p-3 border-2 ${task.completed ? 'bg-mystic-900/50 border-mystic-700 opacity-75' : 'bg-mystic-900 border-mystic-600'} rounded transition-all`;
+                
+                taskEl.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden cursor-pointer flex-grow" onclick="toggleTask(${task.id})">
+                        <div class="w-6 h-6 flex-shrink-0 flex items-center justify-center border-2 ${task.completed ? 'bg-forest-600 border-forest-500 text-white' : 'border-mystic-500 bg-mystic-800'} rounded">
+                            ${task.completed ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                        </div>
+                        <span class="text-xl truncate ${task.completed ? 'line-through text-mystic-500' : 'text-forest-300'}">${escapeHtml(task.text)}</span>
+                    </div>
+                    <button onclick="deleteTask(${task.id})" class="text-corrupt-500 hover:text-corrupt-400 p-2 text-sm ml-2">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                container.appendChild(taskEl);
+            });
+
+            updateForestState();
+        }
+
+        function addTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('task-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            tasks.push({
+                id: Date.now(),
+                text: text,
+                completed: false
+            });
+
+            input.value = '';
+            playSound('click');
+            renderTasks();
+            showDialogue("A new quest blooms in the sacred soil!");
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                if (task.completed) {
+                    playSound('complete');
+                    showDialogue("Wonderful! The forest absorbs your pure energy!");
+                } else {
+                    playSound('click');
+                }
+                renderTasks();
+            }
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            playSound('corrupt');
+            renderTasks();
+            showDialogue("A quest fades away into the mist.");
+        }
+
+        function clearCompletedTasks() {
+            tasks = tasks.filter(t => !t.completed);
+            playSound('click');
+            renderTasks();
+            showDialogue("Completed quests returned to the ether.");
+        }
+
+        function resetForest() {
+            tasks = [
+                { id: Date.now() + 1, text: "Water the mystical forest ferns", completed: false },
+                { id: Date.now() + 2, text: "Meditate under the purple canopy", completed: false }
+            ];
+            playSound('corrupt');
+            renderTasks();
+            showDialogue("The forest cycle resets. Stay strong, Guardian!");
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            playSound('click');
+            
+            ['all', 'active', 'completed'].forEach(f => {
+                const btn = document.getElementById(`filter-${f}`);
+                if (f === filter) {
+                    btn.className = "flex-1 py-1 bg-mystic-700 text-forest-300 border border-mystic-500 font-bold";
+                } else {
+                    btn.className = "flex-1 py-1 bg-mystic-900 text-mystic-400 border border-mystic-700";
+                }
+            });
+            renderTasks();
+        }
+
+        // --- Interactive Forest Entities ---
+        const dialogues = {
+            bunny: [
+                "Bibi the bunny says: 'Remember to stretch your paws and take a deep breath!'",
+                "Bibi twitches her nose: 'You're doing amazing today, Guardian!'",
+                "Bibi munches on a clover: 'Every task completed makes my fur sparkle brighter!'"
+            ],
+            corrupted_tree: [
+                "The corrupted tree groans: 'The void whispers doubt... Complete a task to heal me!'",
+                "Dark sap oozes from the bark, longing for pure green light."
+            ],
+            crystal: [
+                "The Pure Shard resonates with harmonious green frequencies.",
+                "Energy pulses through the soil, strengthening your focus."
+            ],
+            corrupt_crystal: [
+                "The Void Node flickers angrily. Finish your tasks to dissolve it!",
+                "Pink glitch energy sparks across the crystal surface."
+            ],
+            mushroom: [
+                "Misha the mushroom giggles: 'Hello friend! We believe in you!'",
+                "Misha spores glow in cozy purple hues."
+            ]
+        };
+
+        function showDialogue(text) {
+            const dialogueEl = document.getElementById('forest-dialogue');
+            dialogueEl.textContent = `"${text}"`;
+            dialogueEl.classList.add('scale-105');
+            setTimeout(() => {
+                dialogueEl.classList.remove('scale-105');
+            }, 200);
+        }
+
+        function interactWithEntity(entityType) {
+            playSound('click');
+            const list = dialogues[entityType] || ["The forest listens intently."];
+            const randomMsg = list[Math.floor(Math.random() * list.length)];
+            showDialogue(randomMsg);
+        }
+
+        // --- Lore Modal Helpers ---
+        function showSanctuaryLore() {
+            playSound('click');
+            document.getElementById('lore-modal').classList.remove('hidden');
+        }
+
+        function closeSanctuaryLore() {
+            playSound('click');
+            document.getElementById('lore-modal').classList.add('hidden');
+        }
+
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            initFireflies();
+            renderTasks();
+        };
+    </script>
+</body>
+</html>
