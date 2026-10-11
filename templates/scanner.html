@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Waste Scanner</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #111;
+    color: #eee;
+    font-family: system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .topbar {
+    width: 100%;
+    padding: 10px 16px;
+    background: #1b1b1b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+  }
+  .title { font-weight: 700; font-size: 1rem; }
+  .close-x {
+    font-size: 1.2rem;
+    text-decoration: none;
+    color: #fff;
+    background: #d33;
+    padding: 4px 12px;
+    border-radius: 8px;
+  }
+  img {
+    margin-top: 16px;
+    border: 1px solid #333;
+    border-radius: 8px;
+  }
+  .legend {
+    margin: 12px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="title">♻ Waste Assistant</span>
+    <a href="/" class="close-x">✕ Close</a>
+  </div>
+
+  <img src="/video_feed" width="640" alt="Camera feed">
+  <p class="legend">
+    Green = recycle/compost &nbsp;•&nbsp; Red = trash / special handling
+  </p>
+</body>
+</html>
